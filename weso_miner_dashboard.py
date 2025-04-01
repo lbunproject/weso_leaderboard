@@ -33,6 +33,22 @@ if 'nft_multiplier' in df.columns:
 # Compute crypto earned as the sum of crypto_paid and crypto_pending
 df['crypto_earned'] = df['crypto_paid'] + df['crypto_pending']
 
+# Drop the msgs_received column if it exists
+if 'msgs_received' in df.columns:
+    df = df.drop(columns=['msgs_received'])
+
+# Reorder columns
+desired_columns = ['wallet_addr', 'blocks_won', 'crypto_earned', 'crypto_paid', 'crypto_pending', 'hashes_submitted']
+df = df[desired_columns]
+
+#Rename columns
+df = df.rename(columns={'wallet_addr': 'Miner Wallet'})
+df = df.rename(columns={'blocks_won': 'Blocks Won'})
+df = df.rename(columns={'crypto_earned': 'WESO Earned'})
+df = df.rename(columns={'crypto_paid': 'WESO Paid'})
+df = df.rename(columns={'crypto_pending': 'WESO Pending'})
+df = df.rename(columns={'hashes_submitted': 'Hashes Submitted'})
+
 # Display the raw data (without the shortened wallet address)
 st.subheader("Raw Leaderboard Data")
 st.dataframe(df)
@@ -52,7 +68,7 @@ with col3:
 
 # Create a copy of the DataFrame for charts and add a shortened wallet address column.
 df_chart = df.copy()
-df_chart['short_wallet_addr'] = df_chart['wallet_addr'].apply(
+df_chart['short_wallet_addr'] = df_chart['wallet'].apply(
     lambda x: x[:7] + "..." + x[-5:] if len(x) > 12 else x
 )
 
