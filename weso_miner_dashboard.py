@@ -68,7 +68,7 @@ with col3:
 
 # Create a copy of the DataFrame for charts and add a shortened wallet address column.
 df_chart = df.copy()
-df_chart['short_wallet_addr'] = df_chart['wallet'].apply(
+df_chart['short_wallet_addr'] = df_chart['Miner Wallet'].apply(
     lambda x: x[:7] + "..." + x[-5:] if len(x) > 12 else x
 )
 
@@ -77,7 +77,7 @@ df_chart['short_wallet_addr'] = df_chart['wallet'].apply(
 # 1. Blocks Won per Wallet Address
 st.subheader("Blocks Won per Wallet Address")
 blocks_chart = alt.Chart(df_chart).mark_bar(color='purple').encode(
-    x=alt.X('blocks_won:Q', title='Blocks Won'),
+    x=alt.X('Blocks Won:Q', title='Blocks Won'),
     y=alt.Y('short_wallet_addr:N', sort='-x', title='Wallet Address')
 ).properties(width=700, height=300)
 st.altair_chart(blocks_chart, use_container_width=True)
@@ -85,7 +85,7 @@ st.altair_chart(blocks_chart, use_container_width=True)
 # 2. Crypto Earned per Wallet Address
 st.subheader("WESO Earned per Wallet Address")
 crypto_chart = alt.Chart(df_chart).mark_bar(color='purple').encode(
-    x=alt.X('crypto_earned:Q', title='WESO Earned'),
+    x=alt.X('WESO Earned:Q', title='WESO Earned'),
     y=alt.Y('short_wallet_addr:N', sort='-x', title='Wallet Address')
 ).properties(width=700, height=300)
 st.altair_chart(crypto_chart, use_container_width=True)
