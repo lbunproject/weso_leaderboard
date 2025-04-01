@@ -57,13 +57,13 @@ st.dataframe(df)
 st.subheader("Key Metrics")
 col1, col2, col3 = st.columns(3)
 with col1:
-    total_blocks_won = df['blocks_won'].sum()
+    total_blocks_won = df['Blocks Won'].sum()
     st.metric(label="Total Blocks Won", value=total_blocks_won)
 with col2:
-    total_crypto_earned = df['crypto_earned'].sum()
+    total_crypto_earned = df['WESO Earned'].sum()
     st.metric(label="Total WESO Earned", value=round(total_crypto_earned, 6))
 with col3:
-    total_hashes_submitted = df['hashes_submitted'].sum()
+    total_hashes_submitted = df['Hashes Submitted'].sum()
     st.metric(label="Total Hashes Submitted", value=total_hashes_submitted)
 
 # Create a copy of the DataFrame for charts and add a shortened wallet address column.
