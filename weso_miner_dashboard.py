@@ -93,7 +93,7 @@ st.altair_chart(crypto_chart, use_container_width=True)
 # 3. Hashes Submitted per Wallet Address
 st.subheader("Hashes Submitted per Wallet Address")
 hashes_chart = alt.Chart(df_chart).mark_bar(color='purple').encode(
-    x=alt.X('hashes_submitted:Q', title='Hashes Submitted'),
+    x=alt.X('Hashes Submitted:Q', title='Hashes Submitted'),
     y=alt.Y('short_wallet_addr:N', sort='-x', title='Wallet Address')
 ).properties(width=700, height=300)
 st.altair_chart(hashes_chart, use_container_width=True)
