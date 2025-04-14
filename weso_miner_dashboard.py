@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import altair as alt
 import urllib3
+import locale
 
 # Disable insecure request warnings (since we're skipping SSL verification)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -10,33 +11,42 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Set page configuration
 st.set_page_config(page_title="WESO mining Leaderboard", layout="wide")
 
+# Set locale based on user preference
+# For example, you can change the locale based on the user's region.
+locale.setlocale(locale.LC_ALL, '')  # Use the default locale (e.g., based on the system)
+
 # --- MODIFIED: Layout for Title and Dropdown ---
-col_title, col_select = st.columns([3, 1]) # Create columns (adjust ratio if needed)
+col_title, col_select = st.columns([3, 1])  # Create columns (adjust ratio if needed)
 
 with col_title:
-    st.title("WESO mining Leaderboard") # Title in the left column
+    st.title("WESO mining Leaderboard")  # Title in the left column
 
 with col_select:
-    # Dropdown in the right column
+    # Dropdown in the right column, with session state to persist the selection
+    if 'miner_type' not in st.session_state:
+        st.session_state.miner_type = "Tap to Earn"  # Default value if not set
+
     miner_type = st.selectbox(
         "Miner Type",
         ("Tap to Earn", "Proof of Work"),
-        index=0,  # Default is "Tap to Earn"
-        key="miner_type_selector" # Unique key for the widget
+        index=0 if st.session_state.miner_type == "Tap to Earn" else 1,  # Set the default index based on session state
+        key="miner_type_selector"  # Unique key for the widget
     )
 
+    # Save the selected dropdown value to session_state to persist across refreshes
+    st.session_state.miner_type = miner_type
+
 # --- NEW: Determine the URL based on the dropdown selection ---
-if miner_type == "Tap to Earn":
-    url = "https://159.89.162.245:8185/leaderboard"
-    st.caption("Displaying data for: Tap to Earn") # Optional feedback
-else: # Proof of Work
+if st.session_state.miner_type == "Tap to Earn":
+    url = "https://159.89.162.245:8185/leaderboard?limit=250"
+    st.caption("Displaying data for: Tap to Earn")  # Optional feedback
+else:  # Proof of Work
     url = "https://147.182.214.238:9191/leaderboard"
-    st.caption("Displaying data for: Proof of Work") # Optional feedback
+    st.caption("Displaying data for: Proof of Work")  # Optional feedback
 
-
-# --- MODIFIED: Fetch the data using the selected URL ---
+# --- Fetch the data using the selected URL ---
 try:
-    response = requests.get(url, verify=False, timeout=15) # Added timeout
+    response = requests.get(url, verify=False, timeout=15)  # Added timeout
     response.raise_for_status()  # Raises an error for bad status codes (4xx or 5xx)
     data = response.json()
 # --- MODIFIED: More specific error handling ---
@@ -44,21 +54,20 @@ except requests.exceptions.Timeout:
     st.error(f"Error: Request to {url} timed out.")
     st.stop()
 except requests.exceptions.HTTPError as e:
-     st.error(f"HTTP Error fetching data from {url}: Status code {e.response.status_code}")
-     st.text(f"Response: {e.response.text[:500]}...") # Show part of the server response
-     st.stop()
+    st.error(f"HTTP Error fetching data from {url}: Status code {e.response.status_code}")
+    st.text(f"Response: {e.response.text[:500]}...")  # Show part of the server response
+    st.stop()
 except requests.exceptions.RequestException as e:
     st.error(f"Error fetching data from {url}: {e}")
-    st.stop() # Stop execution if data fetching fails
-except ValueError as e: # Catches JSONDecodeError
+    st.stop()  # Stop execution if data fetching fails
+except ValueError as e:  # Catches JSONDecodeError
     st.error(f"Error decoding JSON data from {url}: {e}")
-    # Try to show the raw text that failed to parse
     st.text("Received content (first 500 chars):")
     st.code(response.text[:500] if 'response' in locals() and hasattr(response, 'text') else "Could not get response text.", language=None)
     st.stop()
 
 
-# --- UNMODIFIED: DataFrame processing (with added safety checks) ---
+# --- DataFrame processing (with added safety checks) ---
 # Create a DataFrame
 try:
     df = pd.DataFrame(data)
@@ -72,7 +81,7 @@ try:
         df['crypto_earned'] = df['crypto_paid'] + df['crypto_pending']
     else:
         st.warning("Could not calculate 'crypto_earned': 'crypto_paid' or 'crypto_pending' column missing.")
-        df['crypto_earned'] = 0 # Assign default value or handle as appropriate
+        df['crypto_earned'] = 0  # Assign default value or handle as appropriate
 
     # Drop the msgs_received column if it exists
     if 'msgs_received' in df.columns:
@@ -102,17 +111,76 @@ try:
 
 except Exception as e:
     st.error(f"Error processing DataFrame: {e}")
-    st.write("Raw data received:", data) # Show raw data if processing fails
+    st.write("Raw data received:", data)  # Show raw data if processing fails
     st.stop()
 
 
-# --- UNMODIFIED: Display Logic (with added safety checks) ---
-st.subheader("Raw Leaderboard Data")
-st.dataframe(df, use_container_width=True)
+# --- Fetch block data based on miner type selection ---
+block_url = ""
+if st.session_state.miner_type == "Tap to Earn":
+    block_url = "https://159.89.162.245:8185/blocks?limit=20"
+else:  # Proof of Work
+    block_url = "https://147.182.214.238:9191/blocks?limit=20"
 
-# Display key metrics
-st.subheader("Key Metrics")
-col_m1, col_m2, col_m3 = st.columns(3)
+# Fetch block data
+try:
+    block_response = requests.get(block_url, verify=False, timeout=15)  # Added timeout
+    block_response.raise_for_status()  # Raises an error for bad status codes (4xx or 5xx)
+    block_data = block_response.json()
+except requests.exceptions.Timeout:
+    st.error(f"Error: Request to {block_url} timed out.")
+    st.stop()
+except requests.exceptions.HTTPError as e:
+    st.error(f"HTTP Error fetching data from {block_url}: Status code {e.response.status_code}")
+    st.text(f"Response: {e.response.text[:500]}...")  # Show part of the server response
+    st.stop()
+except requests.exceptions.RequestException as e:
+    st.error(f"Error fetching data from {block_url}: {e}")
+    st.stop()  # Stop execution if data fetching fails
+except ValueError as e:  # Catches JSONDecodeError
+    st.error(f"Error decoding JSON data from {block_url}: {e}")
+    st.text("Received content (first 500 chars):")
+    st.code(block_response.text[:500] if 'block_response' in locals() and hasattr(block_response, 'text') else "Could not get response text.", language=None)
+    st.stop()
+
+
+# --- DataFrame processing for blocks ---
+try:
+    block_df = pd.DataFrame(block_data)
+
+    # Drop the 'hashes_submitted' and 'exact' columns if they exist
+    if 'hashes_submitted' in block_df.columns:
+        block_df = block_df.drop(columns=['hashes_submitted'])
+    if 'exact' in block_df.columns:
+        block_df = block_df.drop(columns=['exact'])
+
+    # Rename columns
+    block_rename_map = {
+        'block_number': 'Block Number',
+        'winner_wallet_addr': 'Winner',
+        'active_miners': 'Active Miners'
+    }
+    block_df = block_df.rename(columns=block_rename_map)
+
+    # Reorder the columns
+    block_columns_order = ['Block Number', 'Winner', 'block_hash', 'Active Miners']
+    block_df = block_df[block_columns_order]
+
+except Exception as e:
+    st.error(f"Error processing Block Data: {e}")
+    st.write("Raw data received:", block_data)  # Show raw data if processing fails
+    st.stop()
+
+# --- Format numbers with thousands separator ---
+def format_with_thousands_separator(value):
+    # Only apply formatting if the value is numeric
+    if isinstance(value, (int, float)):
+        return locale.format_string("%d", value, grouping=True)
+    return value  # Return the value as-is if it's not numeric
+
+st.subheader("Community Totals")
+# --- Define columns for the metrics ---
+col_m1, col_m2, col_m3 = st.columns(3)  # Define the columns for displaying metrics
 
 # Define metrics safely - check if columns exist
 metrics_to_display = {
@@ -124,24 +192,35 @@ metric_columns = [col_m1, col_m2, col_m3]
 
 i = 0
 for col_name, (label, default_value) in metrics_to_display.items():
-    if i < len(metric_columns): # Ensure we don't run out of columns
+    if i < len(metric_columns):  # Ensure we don't run out of columns
         with metric_columns[i]:
             if col_name in df.columns:
                 value = df[col_name].sum()
+                # Apply thousands separator formatting for integers or floats
+                value = format_with_thousands_separator(value)
                 # Apply rounding for float values (like WESO Earned)
-                if isinstance(default_value, float):
+                if isinstance(value, (int, float)):
                     value = round(value, 6)
             else:
                 value = default_value
-                label = f"{label} (N/A)" # Indicate if data is missing
+                label = f"{label} (N/A)"  # Indicate if data is missing
             st.metric(label=label, value=value)
         i += 1
 
 
-# Create a copy of the DataFrame for charts
+
+# --- Display Table (with added safety checks) ---
+st.subheader("Leaderboard Stats")
+st.dataframe(df, use_container_width=True)
+
+# --- NEW: Display Block Data ---
+st.subheader("Last 20 blocks")
+st.dataframe(block_df, use_container_width=True)
+
+# --- Create a copy of the DataFrame for charts ---
 df_chart = df.copy()
 
-# --- UNMODIFIED: Chart Creation (with added safety checks) ---
+# --- Chart Creation (with added safety checks) ---
 # Add shortened wallet address safely
 if 'Miner Wallet' in df_chart.columns:
     # Ensure the column is treated as string before slicing
@@ -190,6 +269,7 @@ if charts_possible:
     else:
          st.info("Info: 'Hashes Submitted' data not available for charting.")
 
+
 # Add a footer or separator if desired
 st.markdown("---")
-st.caption(f"Leaderboard data fetched at: {pd.Timestamp.now(tz='America/Chicago').strftime('%Y-%m-%d %H:%M:%S %Z')}") # Example using pandas timestamp with timezone
+st.caption(f"Data fetched at: {pd.Timestamp.now(tz='America/Chicago').strftime('%Y-%m-%d %H:%M:%S %Z')}")
