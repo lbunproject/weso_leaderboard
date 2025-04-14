@@ -164,7 +164,7 @@ try:
     block_df = block_df.rename(columns=block_rename_map)
 
     # Reorder the columns
-    block_columns_order = ['Block Number', 'Winner', 'block_hash', 'Active Miners']
+    block_columns_order = ['Block Number', 'Winner', 'Block Hash', 'Active Miners']
     block_df = block_df[block_columns_order]
 
 except Exception as e:
