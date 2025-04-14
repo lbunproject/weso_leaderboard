@@ -158,7 +158,8 @@ try:
     block_rename_map = {
         'block_number': 'Block Number',
         'winner_wallet_addr': 'Winner',
-        'active_miners': 'Active Miners'
+        'active_miners': 'Active Miners',
+        'block_hash': 'Block Hash'
     }
     block_df = block_df.rename(columns=block_rename_map)
 
