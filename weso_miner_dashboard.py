@@ -41,7 +41,7 @@ if st.session_state.miner_type == "Tap to Earn":
     url = "https://159.89.162.245:8185/leaderboard?limit=250"
     st.caption("Displaying data for: Tap to Earn")  # Optional feedback
 else:  # Proof of Work
-    url = "https://147.182.214.238:9191/leaderboard?window=365d&limit=50"
+    url = "https://147.182.214.238:9191/leaderboard?window=all_timed&limit=50"
     st.caption("Displaying data for: Proof of Work")  # Optional feedback
 
 # --- Fetch the data using the selected URL ---
