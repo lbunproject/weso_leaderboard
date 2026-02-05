@@ -6,7 +6,7 @@ import urllib3
 import locale
 
 # Disable insecure request warnings (since we're skipping SSL verification)
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Set page configuration
 st.set_page_config(page_title="WESO mining Leaderboard", layout="wide")
@@ -274,3 +274,4 @@ if charts_possible:
 # Add a footer or separator if desired
 st.markdown("---")
 st.caption(f"Data fetched at: {pd.Timestamp.now(tz='America/Chicago').strftime('%Y-%m-%d %H:%M:%S %Z')}")
+
