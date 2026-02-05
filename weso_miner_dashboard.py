@@ -6,7 +6,7 @@ import urllib3
 import locale
 
 # Disable insecure request warnings (since we're skipping SSL verification)
-# urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Set page configuration
 st.set_page_config(page_title="WESO mining Leaderboard", layout="wide")
@@ -38,10 +38,10 @@ with col_select:
 
 # --- NEW: Determine the URL based on the dropdown selection ---
 if st.session_state.miner_type == "Tap to Earn":
-    url = "https://weso-tap.lbunproject.tech/leaderboard?limit=250"
+    url = "https://weso-tap.lbunproject.tech/leaderboard?window=all_time&limit=100"
     st.caption("Displaying data for: Tap to Earn")  # Optional feedback
 else:  # Proof of Work
-    url = "https://weso-pow.lbunproject.tech/leaderboard?limit=100"
+    url = "https://weso-pow.lbunproject.tech/leaderboard?window=all_time&limit=100"
     st.caption("Displaying data for: Proof of Work")  # Optional feedback
 
 # --- Fetch the data using the selected URL ---
