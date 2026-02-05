@@ -38,10 +38,10 @@ with col_select:
 
 # --- NEW: Determine the URL based on the dropdown selection ---
 if st.session_state.miner_type == "Tap to Earn":
-    url = "https://159.89.162.245:8185/leaderboard?limit=250"
+    url = "https://weso-tap.lbunproject.tech/leaderboard?limit=250"
     st.caption("Displaying data for: Tap to Earn")  # Optional feedback
 else:  # Proof of Work
-    url = "https://147.182.214.238:9191/leaderboard?window=365d&limit=100"
+    url = "https://weso-pow.lbunproject.tech/leaderboard?limit=100"
     st.caption("Displaying data for: Proof of Work")  # Optional feedback
 
 # --- Fetch the data using the selected URL ---
@@ -118,9 +118,9 @@ except Exception as e:
 # --- Fetch block data based on miner type selection ---
 block_url = ""
 if st.session_state.miner_type == "Tap to Earn":
-    block_url = "https://159.89.162.245:8185/blocks?limit=20"
+    block_url = "https://weso-tap.lbunproject.tech/blocks?limit=20"
 else:  # Proof of Work
-    block_url = "https://147.182.214.238:9191/blocks?limit=20"
+    block_url = "https://weso-pow.lbunproject.tech/blocks?limit=20"
 
 # Fetch block data
 try:
@@ -274,4 +274,5 @@ if charts_possible:
 # Add a footer or separator if desired
 st.markdown("---")
 st.caption(f"Data fetched at: {pd.Timestamp.now(tz='America/Chicago').strftime('%Y-%m-%d %H:%M:%S %Z')}")
+
 
